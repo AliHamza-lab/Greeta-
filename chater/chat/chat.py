@@ -1,7 +1,7 @@
 import json
 import torch
-from my_nltk_script import bag_of_words, tokenize
-from model import NeuralNet
+from .my_nltk_script import bag_of_words, tokenize
+from .model import NeuralNet
 import random
 from googletrans import Translator
 import requests
