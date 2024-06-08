@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'chater.urls'
+ROOT_URLCONF = 'chat.urls'
 
 TEMPLATES = [
     {
@@ -68,7 +68,7 @@ TEMPLATES = [
     
 ]
 
-WSGI_APPLICATION = 'chater.wsgi.application'
+WSGI_APPLICATION = 'chat.wsgi.application'
 
 
 # Database
