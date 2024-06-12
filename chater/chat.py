@@ -5,13 +5,13 @@ from .model import NeuralNet
 import random
 from googletrans import Translator
 import requests
-import sounddevice as sd
-import soundfile as sf
+from pydub import AudioSegment
+from pydub.playback import play
 import io
 import os
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor
-import wikipedia 
+import wikipedia
 import re
 
 class ChatBot:
@@ -45,45 +45,57 @@ class ChatBot:
         if (text, dest_language) in ChatBot.translation_cache:
             return ChatBot.translation_cache[(text, dest_language)]
         
-        translation = ChatBot.translator.translate(text, dest=dest_language)
-        translated_text = translation.text
-        ChatBot.translation_cache[(text, dest_language)] = translated_text
-        
-        return translated_text
+        try:
+            translation = ChatBot.translator.translate(text, dest=dest_language)
+            translated_text = translation.text
+            ChatBot.translation_cache[(text, dest_language)] = translated_text
+            return translated_text
+        except Exception as e:
+            print(f"Translation error: {e}")
+            return text
 
     @staticmethod
     def generate_audio(text, lang='ENG'):
-        response = requests.post(
-            'https://api.bland.ai/v1/voices/e1289219-0ea2-4f22-a994-c542c2a48a0f/sample',
-            headers={
-                'Content-Type': 'application/json',
-                'authorization': ChatBot.api_key
-            },
-            json={
-                'text': text,
-                'voice_settings': {},
-                'language': lang
-            }
-        )
-        if response.status_code == 200:
-            return response.content
-        else:
-            print(f"Failed to generate audio for: {text}. Status code: {response.status_code}")
+        try:
+            response = requests.post(
+                'https://api.bland.ai/v1/voices/e1289219-0ea2-4f22-a994-c542c2a48a0f/sample',
+                headers={
+                    'Content-Type': 'application/json',
+                    'authorization': ChatBot.api_key
+                },
+                json={
+                    'text': text,
+                    'voice_settings': {},
+                    'language': lang
+                }
+            )
+            if response.status_code == 200:
+                return response.content
+            else:
+                print(f"Failed to generate audio for: {text}. Status code: {response.status_code}")
+                return None
+        except requests.RequestException as e:
+            print(f"Request error: {e}")
             return None
 
     @staticmethod
     def play_audio(audio_data):
         if audio_data:
-            with sf.SoundFile(io.BytesIO(audio_data)) as audio_file:
-                audio_array = audio_file.read(dtype='float32')
-                sd.play(audio_array, audio_file.samplerate)
-                sd.wait()
+            try:
+                audio = AudioSegment.from_file(io.BytesIO(audio_data), format="wav")
+                play(audio)
+            except Exception as e:
+                print(f"Audio playback error: {e}")
         else:
             print("Audio generation failed")
 
 def get_response(sentence):
     bot_name = "Greeta:\n"
-    lang = ChatBot.translator.detect(sentence).lang
+    try:
+        lang = ChatBot.translator.detect(sentence).lang
+    except Exception as e:
+        print(f"Language detection error: {e}")
+        lang = 'en'  # Default to English if detection fails
 
     translated_sentence = ChatBot.translate_text(sentence)
 
