@@ -9,4 +9,12 @@ gunicorn==22.0.0
 dj-database-url==2.2.0
 psycopg2==2.9.9
 torch
+nltk 
+googletrans
+wikipedia 
+numpy 
+soundfile 
+pydub 
+python-dotenv
+requests
 
