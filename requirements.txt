@@ -14,7 +14,6 @@ googletrans
 wikipedia 
 numpy 
 soundfile 
-pydub 
 python-dotenv
 requests
 
