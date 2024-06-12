@@ -5,8 +5,6 @@ from .model import NeuralNet
 import random
 from googletrans import Translator
 import requests
-from pydub import AudioSegment
-from pydub.playback import play
 import io
 import os
 from dotenv import load_dotenv
@@ -78,17 +76,6 @@ class ChatBot:
             print(f"Request error: {e}")
             return None
 
-    @staticmethod
-    def play_audio(audio_data):
-        if audio_data:
-            try:
-                audio = AudioSegment.from_file(io.BytesIO(audio_data), format="wav")
-                play(audio)
-            except Exception as e:
-                print(f"Audio playback error: {e}")
-        else:
-            print("Audio generation failed")
-
 def get_response(sentence):
     bot_name = "Greeta:\n"
     try:
@@ -129,11 +116,16 @@ def get_response(sentence):
 
     translated_response = ChatBot.translate_text(response_text, dest_language=lang)
 
-    audio_future = ChatBot.executor.submit(ChatBot.generate_audio, translated_response)
-    try:
-        audio_data = audio_future.result(timeout=10)
-        ChatBot.play_audio(audio_data)
-    except Exception as e:
-        print(f"Audio generation error: {e}")
+    audio_data = ChatBot.generate_audio(translated_response)
+    if audio_data:
+        try:
+            # Implement your logic to play audio here, based on the format returned by your API
+            # For example:
+            # play_audio(audio_data)
+            pass
+        except Exception as e:
+            print(f"Audio playback error: {e}")
+    else:
+        print("Audio generation failed")
 
     return bot_name + translated_response
