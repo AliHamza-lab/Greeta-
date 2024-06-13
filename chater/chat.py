@@ -34,15 +34,17 @@ class ChatBot:
     model.load_state_dict(model_state)
     model.eval()
 
-    executor = ThreadPoolExecutor(max_workers=5) 
+    executor = ThreadPoolExecutor(max_workers=5)
 
     translation_cache = {}
 
     @staticmethod
     def translate_text(text, dest_language='en'):
+        if not text:
+            return text
         if (text, dest_language) in ChatBot.translation_cache:
             return ChatBot.translation_cache[(text, dest_language)]
-        
+
         try:
             translation = ChatBot.translator.translate(text, dest=dest_language)
             translated_text = translation.text
@@ -54,6 +56,8 @@ class ChatBot:
 
     @staticmethod
     def generate_audio(text, lang='ENG'):
+        if not text:
+            return None
         try:
             response = requests.post(
                 'https://api.bland.ai/v1/voices/e1289219-0ea2-4f22-a994-c542c2a48a0f/sample',
@@ -78,6 +82,9 @@ class ChatBot:
 
 def get_response(sentence):
     bot_name = "Greeta:\n"
+    if not sentence:
+        return bot_name + "Sorry, I didn't get it. Can you please rephrase?"
+    
     try:
         lang = ChatBot.translator.detect(sentence).lang
     except Exception as e:
@@ -103,8 +110,7 @@ def get_response(sentence):
                              for intent in ChatBot.intents["intents"] if tag == intent["tag"])
     else:
         try:
-            response_text = translated_sentence  # Use the translated sentence as the query for Wikipedia
-            summary = wikipedia.summary(response_text, sentences=1)
+            summary = wikipedia.summary(translated_sentence, sentences=1)
             response_text = re.sub(r',(?![a-zA-Z0-9])', '', summary)
         except wikipedia.exceptions.PageError:
             response_text = "Sorry, the response for the given topic was not found."
