@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from .chat import get_response
+from django.http import JsonResponse
 
 
 def home(request):
