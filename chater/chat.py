@@ -5,12 +5,11 @@ from .model import NeuralNet
 import random
 from googletrans import Translator
 import requests
-import io
 import os
 from dotenv import load_dotenv
-from concurrent.futures import ThreadPoolExecutor
 import wikipedia
 import re
+import logging
 
 class ChatBot:
     load_dotenv()
@@ -34,8 +33,6 @@ class ChatBot:
     model.load_state_dict(model_state)
     model.eval()
 
-    executor = ThreadPoolExecutor(max_workers=5)
-
     translation_cache = {}
 
     @staticmethod
@@ -47,11 +44,13 @@ class ChatBot:
 
         try:
             translation = ChatBot.translator.translate(text, dest=dest_language)
+            if translation is None:
+                raise Exception("Translation returned None")
             translated_text = translation.text
             ChatBot.translation_cache[(text, dest_language)] = translated_text
             return translated_text
         except Exception as e:
-            print(f"Translation error: {e}")
+            logging.error(f"Translation error: {e}")
             return text
 
     @staticmethod
@@ -74,10 +73,10 @@ class ChatBot:
             if response.status_code == 200:
                 return response.content
             else:
-                print(f"Failed to generate audio for: {text}. Status code: {response.status_code}")
+                logging.error(f"Failed to generate audio for: {text}. Status code: {response.status_code}")
                 return None
         except requests.RequestException as e:
-            print(f"Request error: {e}")
+            logging.error(f"Request error: {e}")
             return None
 
 def get_response(sentence):
@@ -86,12 +85,13 @@ def get_response(sentence):
         return bot_name + "Sorry, I didn't get it. Can you please rephrase?"
     
     try:
-        lang = ChatBot.translator.detect(sentence).lang
+        lang_detection = ChatBot.translator.detect(sentence)
+        lang = lang_detection.lang if lang_detection is not None else 'en'
     except Exception as e:
-        print(f"Language detection error: {e}")
+        logging.error(f"Language detection error: {e}")
         lang = 'en'  # Default to English if detection fails
 
-    translated_sentence = ChatBot.translate_text(sentence)
+    translated_sentence = ChatBot.translate_text(sentence, dest_language=lang)
 
     sentence_tokens = tokenize(translated_sentence)
     X = bag_of_words(sentence_tokens, ChatBot.all_words)
@@ -117,8 +117,8 @@ def get_response(sentence):
         except wikipedia.exceptions.DisambiguationError:
             response_text = "Ambiguous topic! Please provide more specific details."
         except Exception as e:
+            logging.error(f"Wikipedia fetch error: {e}")
             response_text = "Sorry, I didn't get it. Can you please rephrase?"
-            print("Error:", e)
 
     translated_response = ChatBot.translate_text(response_text, dest_language=lang)
 
@@ -130,8 +130,8 @@ def get_response(sentence):
             # play_audio(audio_data)
             pass
         except Exception as e:
-            print(f"Audio playback error: {e}")
+            logging.error(f"Audio playback error: {e}")
     else:
-        print("Audio generation failed")
+        logging.error("Audio generation failed")
 
     return bot_name + translated_response
