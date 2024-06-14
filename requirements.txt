@@ -16,4 +16,5 @@ numpy
 soundfile 
 python-dotenv
 requests
+sounddevice
 
