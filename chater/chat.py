@@ -1,29 +1,34 @@
 import json
 import torch
-from .my_nltk_script import bag_of_words, tokenize
-from .model import NeuralNet
 import random
-from googletrans import Translator
+import logging
+import re
 import requests
 import os
-from dotenv import load_dotenv
-import wikipedia
-import re
-import logging
 from concurrent.futures import ThreadPoolExecutor
+from googletrans import Translator
+import wikipedia
 import pygame
 import io
+from dotenv import load_dotenv
+from .my_nltk_script import bag_of_words, tokenize
+from .model import NeuralNet
+
+# Initialize environment variables
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 class ChatBot:
-    load_dotenv()
-    api_key = 'sk-x3nw2tbe5ancuh6q2ocsejp9ts30ggjrqat8ucz1p9gpdh8lj6r7rby8mdbmukvy69'
+    api_key = os.getenv('API_KEY', 'sk-x3nw2tbe5ancuh6q2ocsejp9ts30ggjrqat8ucz1p9gpdh8lj6r7rby8mdbmukvy69')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     translator = Translator()
 
-    with open(r'static/intents.json', 'r') as f:
+    with open('static/intents.json', 'r') as f:
         intents = json.load(f)
 
-    FILE = r"static/data.pth"
+    FILE = "static/data.pth"
     data = torch.load(FILE)
     input_size = data["input_size"]
     hidden_size = data["hidden_size"]
@@ -89,13 +94,14 @@ class ChatBot:
             return None
 
     @staticmethod
-    def play_audio(audio_data):
+    def save_audio(audio_data, filename='output.mp3'):
         if audio_data:
-            pygame.mixer.init()
-            pygame.mixer.music.load(io.BytesIO(audio_data))
-            pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy():
-                pygame.time.Clock().tick(10)
+            try:
+                with open(filename, 'wb') as f:
+                    f.write(audio_data)
+                logging.info(f"Audio saved as {filename}")
+            except Exception as e:
+                logging.error(f"Error saving audio: {e}")
         else:
             logging.error("Audio generation failed")
 
@@ -111,7 +117,7 @@ def get_response(sentence):
         logging.error(f"Language detection error: {e}")
         lang = 'en'  # Default to English if detection fails
 
-    translated_sentence = ChatBot.translate_text(sentence, dest_language=lang)
+    translated_sentence = ChatBot.translate_text(sentence, dest_language='en')
 
     sentence_tokens = tokenize(translated_sentence)
     X = bag_of_words(sentence_tokens, ChatBot.all_words)
@@ -145,7 +151,8 @@ def get_response(sentence):
     audio_future = ChatBot.executor.submit(ChatBot.generate_audio, translated_response)
     try:
         audio_data = audio_future.result(timeout=10)
-        ChatBot.play_audio(audio_data)
+        if audio_data:
+            ChatBot.save_audio(audio_data)
     except Exception as e:
         logging.error(f"Audio generation error: {e}")
 
