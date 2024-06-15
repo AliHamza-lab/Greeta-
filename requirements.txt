@@ -16,5 +16,4 @@ numpy
 soundfile 
 python-dotenv
 requests
-
-
+pygame 
