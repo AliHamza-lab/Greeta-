@@ -3,121 +3,135 @@ import torch
 from .my_nltk_script import bag_of_words, tokenize
 from .model import NeuralNet
 import random
-from googletrans import Translator 
+from googletrans import Translator
 import requests
-import sounddevice as sd
-import soundfile as sf  
-import io  
-import os 
+import os
 from dotenv import load_dotenv
-from concurrent.futures import ThreadPoolExecutor
+import wikipedia
+import re
+import logging
 
-load_dotenv()
+class ChatBot:
+    load_dotenv()
+    api_key = os.getenv("API_KEY")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    translator = Translator()
 
-api_key = 'sk-x3nw2tbe5ancuh6q2ocsejp9ts30ggjrqat8ucz1p9gpdh8lj6r7rby8mdbmukvy69'
+    with open(r'static/intents.json', 'r') as f:
+        intents = json.load(f)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    FILE = r"static/data.pth"
+    data = torch.load(FILE)
+    input_size = data["input_size"]
+    hidden_size = data["hidden_size"]
+    output_size = data["output_size"]
+    all_words = data["all_words"]
+    tags = data["tags"]
+    model_state = data["model_state"]
 
-translator = Translator()
+    model = NeuralNet(input_size, hidden_size, output_size).to(device)
+    model.load_state_dict(model_state)
+    model.eval()
 
-with open(r'static/intents.json', 'r') as f:
-    intents = json.load(f)
+    translation_cache = {}
 
-FILE = r"static/data.pth"
-data = torch.load(FILE)
-input_size = data["input_size"]
-hidden_size = data["hidden_size"]
-output_size = data["output_size"]
-all_words = data["all_words"]
-tags = data["tags"]
-model_state = data["model_state"]
+    @staticmethod
+    def translate_text(text, dest_language='en'):
+        if not text:
+            return text
+        if (text, dest_language) in ChatBot.translation_cache:
+            return ChatBot.translation_cache[(text, dest_language)]
 
-model = NeuralNet(input_size, hidden_size, output_size).to(device)
-model.load_state_dict(model_state)
-model.eval()
+        try:
+            translation = ChatBot.translator.translate(text, dest=dest_language)
+            if translation is None:
+                raise Exception("Translation returned None")
+            translated_text = translation.text
+            ChatBot.translation_cache[(text, dest_language)] = translated_text
+            return translated_text
+        except Exception as e:
+            logging.error(f"Translation error: {e}")
+            return text
 
-executor = ThreadPoolExecutor(max_workers=5)  # Adjust max_workers as needed
-
-
-def translate_text(text, dest_language='en'):
-    translation = translator.translate(text, dest=dest_language)
-    return translation.text
-
-
-def generate_audio(text, lang='ENG'):
-    response = requests.post(
-        'https://api.bland.ai/v1/voices/e1289219-0ea2-4f22-a994-c542c2a48a0f/sample',
-        headers={
-            'Content-Type': 'application/json',
-            'authorization': api_key
-        },
-        json={
-            'text': text,
-            'voice_settings': {},
-            'language': lang
-        }
-    )
-    if response.status_code == 200:
-        return response.content
-    else:
-        print(f"Failed to generate audio for: {text}. Status code: {response.status_code}")
-        return None
-
+    @staticmethod
+    def generate_audio(text, lang='ENG'):
+        if not text:
+            return None
+        try:
+            response = requests.post(
+                'https://api.bland.ai/v1/voices/e1289219-0ea2-4f22-a994-c542c2a48a0f/sample',
+                headers={
+                    'Content-Type': 'application/json',
+                    'authorization': ChatBot.api_key
+                },
+                json={
+                    'text': text,
+                    'voice_settings': {},
+                    'language': lang
+                }
+            )
+            if response.status_code == 200:
+                return response.content
+            else:
+                logging.error(f"Failed to generate audio for: {text}. Status code: {response.status_code}")
+                return None
+        except requests.RequestException as e:
+            logging.error(f"Request error: {e}")
+            return None
 
 def get_response(sentence):
     bot_name = "Greeta:\n"
-    lang = translator.detect(sentence).lang
+    if not sentence:
+        return bot_name + "Sorry, I didn't get it. Can you please rephrase?"
+    
+    try:
+        lang_detection = ChatBot.translator.detect(sentence)
+        lang = lang_detection.lang if lang_detection is not None else 'en'
+    except Exception as e:
+        logging.error(f"Language detection error: {e}")
+        lang = 'en'  # Default to English if detection fails
 
-    translated_sentence = translate_text(sentence)
+    translated_sentence = ChatBot.translate_text(sentence, dest_language=lang)
 
-    sentence = tokenize(translated_sentence)
-    X = bag_of_words(sentence, all_words)
+    sentence_tokens = tokenize(translated_sentence)
+    X = bag_of_words(sentence_tokens, ChatBot.all_words)
     X = X.reshape(1, X.shape[0])
-    X = torch.from_numpy(X)
-    output = model(X)
+    X = torch.from_numpy(X).to(ChatBot.device)
+
+    output = ChatBot.model(X)
     _, predicted = torch.max(output, dim=1)
-    tag = tags[predicted.item()]
+    tag = ChatBot.tags[predicted.item()]
 
     probs = torch.softmax(output, dim=1)
     prob = probs[0][predicted.item()]
 
     if prob.item() > 0.75:
-        for intent in intents["intents"]:
-            if tag == intent["tag"]:
-                responses = random.choice(intent['responses'])
-                response_text =  responses
-                break
-
-        # Translate response back to the original language
-        translated_response = translate_text(response_text, dest_language=lang)
-
-        # Asynchronously generate audio
-        audio_future = executor.submit(generate_audio, translated_response)
-
-        # Play audio
-        audio_data = audio_future.result(timeout=10)  # Wait for up to 10 seconds
-        if audio_data:
-            with sf.SoundFile(io.BytesIO(audio_data)) as audio_file:
-                audio_array = audio_file.read(dtype='float32')
-                sd.play(audio_array, audio_file.samplerate)
-                sd.wait()
-        else:
-            print("Audio generation failed for:", translated_response)
-
-        return  bot_name+translated_response
+        response_text = next(intent['responses'][random.choice(range(len(intent['responses'])))]
+                             for intent in ChatBot.intents["intents"] if tag == intent["tag"])
     else:
-        apology = "Sorry, I didn't get it. Can you please rephrase?"
-        response_text = apology
-        translated_apology = translate_text(response_text, dest_language=lang)
+        try:
+            summary = wikipedia.summary(translated_sentence, sentences=1)
+            response_text = re.sub(r',(?![a-zA-Z0-9])', '', summary)
+        except wikipedia.exceptions.PageError:
+            response_text = "Sorry, the response for the given topic was not found."
+        except wikipedia.exceptions.DisambiguationError:
+            response_text = "Ambiguous topic! Please provide more specific details."
+        except Exception as e:
+            logging.error(f"Wikipedia fetch error: {e}")
+            response_text = "Sorry, I didn't get it. Can you please rephrase?"
 
-        apology_audio_future = executor.submit(generate_audio, translated_apology)
-        audio_data = apology_audio_future.result(timeout=10)
-        if audio_data:
-            with sf.SoundFile(io.BytesIO(audio_data)) as audio_file:
-                audio_array = audio_file.read(dtype='float32')
-                sd.play(audio_array, audio_file.samplerate)
-                sd.wait()
-        else:
-            print("Audio generation failed for:", translated_apology)
+    translated_response = ChatBot.translate_text(response_text, dest_language=lang)
 
-        return bot_name+translated_apology
+    audio_data = ChatBot.generate_audio(translated_response)
+    if audio_data:
+        try:
+            # Implement your logic to play audio here, based on the format returned by your API
+            # For example:
+            # play_audio(audio_data)
+            pass
+        except Exception as e:
+            logging.error(f"Audio playback error: {e}")
+    else:
+        logging.error("Audio generation failed")
+
+    return bot_name + translated_response
