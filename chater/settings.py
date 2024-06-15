@@ -1,4 +1,3 @@
-
 """
 Django settings for chat project.
 
@@ -27,9 +26,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['walrus-app-ahyy3.ondigitalocean.app', 'your-other-allowed-hosts', ...]
-# Application definition
+ALLOWED_HOSTS = ['walrus-app-ahyy3.ondigitalocean.app',...]
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -121,7 +120,7 @@ CSRF_COOKIE_SECURE = True if not DEBUG else False
 SECURE_HSTS_SECONDS = 3600 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True if not DEBUG else False
 SECURE_HSTS_PRELOAD = True if not DEBUG else False
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = 'ALLOWALL'  # Allow embedding in iframes from any origin
 
 # Logging
 LOGGING = {
@@ -149,4 +148,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Static files storage
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Additional configurations can go here
+# Additional settings for iframe embedding
+X_FRAME_OPTIONS = 'ALLOWALL'  # Allow embedding in iframes from any origin
+
