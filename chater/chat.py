@@ -20,10 +20,10 @@ class ChatBot:
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     translator = Translator()
 
-    with open(r'static\intents.json', 'r') as f:
+    with open(r'static/intents.json', 'r') as f:
         intents = json.load(f)
 
-    FILE = r"static\data.pth"
+    FILE = r"static/data.pth"
     data = torch.load(FILE)
     input_size = data["input_size"]
     hidden_size = data["hidden_size"]
