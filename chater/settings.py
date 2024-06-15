@@ -1,3 +1,4 @@
+
 """
 Django settings for chat project.
 
@@ -26,9 +27,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Allowed hosts for embedding in iframes (allowing all domains)
-ALLOWED_HOSTS = ['*']
-
+ALLOWED_HOSTS = ['walrus-app-ahyy3.ondigitalocean.app', 'your-other-allowed-hosts', ...]
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,18 +37,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Add your apps here
+    # Your apps here
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Add other middleware here
 ]
 
 ROOT_URLCONF = 'chater.urls'
@@ -74,7 +73,7 @@ WSGI_APPLICATION = 'chater.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL', 'sqlite:///db.sqlite3')),
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL', 'sqlite:///db.sqlite3'))
 }
 
 # Password validation
@@ -95,40 +94,26 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
-USE_L10N = True
+
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 # Media files (Uploaded files)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Security settings
-SECURE_SSL_REDIRECT = True if not DEBUG else False
-SESSION_COOKIE_SECURE = True if not DEBUG else False
-CSRF_COOKIE_SECURE = True if not DEBUG else False
-SECURE_HSTS_SECONDS = 3600 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True if not DEBUG else False
-SECURE_HSTS_PRELOAD = True if not DEBUG else False
 
-# Ensure the 'X-Forwarded-Proto' header is respected
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# Static files storage
-STATICFILES_DIRS = [BASE_DIR / 'static']
-
-# X-Frame-Options to allow embedding in iframes from any domain
-X_FRAME_OPTIONS = 'ALLOWALL'
-
-# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -147,3 +132,11 @@ LOGGING = {
         },
     },
 }
+
+# Ensure the 'X-Forwarded-Proto' header is respected
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Static files storage
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Additional configurations can go here
