@@ -15,7 +15,7 @@ import re
 
 class ChatBot:
     load_dotenv()
-    api_key = os.getenv('API_KEY')
+    api_key = 'sk-x3nw2tbe5ancuh6q2ocsejp9ts30ggjrqat8ucz1p9gpdh8lj6r7rby8mdbmukvy69'
     # Load the API key from .env file
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     translator = Translator()
