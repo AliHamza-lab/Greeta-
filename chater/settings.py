@@ -108,6 +108,11 @@ USE_L10N = True
 
 USE_TZ = True
 
+
+# settings.py in Django project
+X_FRAME_OPTIONS = 'ALLOWALL'  # Allow embedding in iframes from any origin
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
