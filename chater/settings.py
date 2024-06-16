@@ -26,7 +26,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['walrus-app-ahyy3.ondigitalocean.app',...]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
