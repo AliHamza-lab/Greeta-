@@ -113,15 +113,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Security settings
-SECURE_SSL_REDIRECT = True if not DEBUG else False
-SESSION_COOKIE_SECURE = True if not DEBUG else False
-CSRF_COOKIE_SECURE = True if not DEBUG else False
-SECURE_HSTS_SECONDS = 3600 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True if not DEBUG else False
-SECURE_HSTS_PRELOAD = True if not DEBUG else False
-X_FRAME_OPTIONS = 'ALLOWALL'  # Allow embedding in iframes from any origin
-
 # Logging
 LOGGING = {
     'version': 1,
@@ -148,5 +139,3 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Static files storage
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Additional settings for iframe embedding
-X_FRAME_OPTIONS = 'ALLOWALL'  # Allow embedding in iframes from any origin
