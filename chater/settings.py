@@ -55,7 +55,7 @@ ROOT_URLCONF = 'chater.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'],  # Ensure this path is correct
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -150,4 +150,3 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Additional settings for iframe embedding
 X_FRAME_OPTIONS = 'ALLOWALL'  # Allow embedding in iframes from any origin
-
