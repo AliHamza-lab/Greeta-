@@ -18,4 +18,3 @@ python-dotenv
 requests
 pygame 
 sounddevice
-pyaudio
