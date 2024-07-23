@@ -70,7 +70,7 @@
         },
         {
             "tag": "services",
-            "patterns": ["What services do you offer?"," services you have "],
+            "patterns": ["What services do you offer?"," services you have ","Tell me about your services"],
             "responses": [
                 "We offer comprehensive occupational health and safety programs, including risk assessments, safety training, and AI-driven safety management tools."
             ]
@@ -84,14 +84,14 @@
         },
         {
             "tag": "sign_up_free_program",
-            "patterns": ["How can I sign up for the free program?","how I can sign up for a free account","IS it free to use "],
+            "patterns": ["How can I sign up for the free program?","how I can sign up for a free account","IS it free to use ","can i used it withouth paying","paying"],
             "responses": [
                 "Simply click on the 'Services' tab and choose the 'Free Safety Program' option. Fill in your details, and you're all set!\u1F60"
             ]
         },
         {
             "tag": "on_site_training",
-            "patterns": ["Do you offer on-site training?","Do you have on site training?","Onsite training"],
+            "patterns": ["Do you offer on-site training?","Do you have on site training?","Onsite training","What do you offer","what"],
             "responses": [
                 "Yes, we provide on-site training sessions tailored to your specific industry and safety requirements.\ud83d\udc4c"
             ]
@@ -119,7 +119,7 @@
         },
         {
             "tag": "report_incident",
-            "patterns": ["How do I report a safety incident?","How i can register report"],
+            "patterns": ["How do I report a safety incident?","How i can register report","how i can  register complain ","register complain","can i register the complain"],
             "responses": [
                 "You can report incidents directly through our mobile app or website. Quick reporting ensures prompt action and resolution.\uD83D\uDCF1"
             ]
@@ -140,28 +140,28 @@
         },
         {
             "tag": "access_training_materials",
-            "patterns": ["How can I access your training materials?","What are the training materials"],
+            "patterns": ["How can I access your training materials?","What are the training materials","training materials"],
             "responses": [
                 "Our training materials are available online. Once you're enrolled in a program, you'll receive access to all relevant resources.\ud83e\uddbe"
             ]
         },
         {
             "tag": "custom_quote",
-            "patterns": ["Can I get a custom quote for my business?","Could you offer me a special price for my business?"],
+            "patterns": ["Can I get a custom quote for my business?","Could you offer me a special price for my business?","what is the price"],
             "responses": [
                 "Definitely. Contact us with your details, and we'll tailor a quote specifically for your business's safety needs.\uD83D\uDC4B"
             ]
         },
         {
             "tag": "refund_policy",
-            "patterns": ["What is your refund policy?","Do you have refund policy"],
+            "patterns": ["What is your refund policy?","Do you have refund policy","refund policy","how i can get money back ","money back"],
             "responses": [
                 "While our basic program is free, our premium services come with a satisfaction guarantee. Contact us within 30 days for refund inquiries.\uD83D\uDCE0"
             ]
         },
         {
             "tag": "ai_upgrade",
-            "patterns": ["How does the AI upgrade improve safety?","How i can upgrade ai"],
+            "patterns": ["How does the AI upgrade improve safety?","How i can upgrade ai","Ai upgrade","  can i upgrade ai"],
             "responses": [
                 "The AI upgrade provides predictive analytics for potential hazards, automates compliance documentation, and offers real-time safety management insights.\ud83d\udc4b"
             ]
@@ -182,7 +182,7 @@
         },
         {
             "tag": "monitor_safety_performance",
-            "patterns": ["Can I monitor safety performance across multiple locations?","Can i monitor safety perfomance "],
+            "patterns": ["Can I monitor safety performance across multiple locations?","Can i monitor safety perfomance ","how Can i monitor safety perfomance "],
             "responses": [
                 "Absolutely! Our platform allows you to monitor and manage safety performance across all your locations in real-time.\uD83D\uDCE0"
             ]
@@ -196,14 +196,14 @@
         },
         {
             "tag": "update_frequency",
-            "patterns": ["How often are safety protocols updated?"],
+            "patterns": ["How often are safety protocols updated?","How can I update it"],
             "responses": [
                 "We regularly review and update our safety protocols to ensure they're in line with the latest regulations and best practices.\uD83C\uDF06"
             ]
         },
         {
             "tag": "demo",
-            "patterns": ["Can I see a demo of your services?"],
+            "patterns": ["Can I see a demo of your services?","demo","show me the demo of your services"],
             "responses": [
                 "Sure, we'd love to show you how our platform works. Contact us to schedule a live demo at your convenience.\uD83D\uDE0D"
             ]
