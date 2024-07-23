@@ -8,16 +8,17 @@ document.getElementById("messageButton").addEventListener("click", function() {
         messageSpoken = true;
     }
 });
+
 function speakWelcomeMessage() {
     var welcomeMessage = "Welcome to Vigilant Site, your guardian in workplace safety! " +
         "I'm here to guide you through our world of safety solutions. " +
         "Whether you're curious about our services, need advice on " +
         "safety practices, or have any other questions, I've got you " +
         "covered. How can I assist you today?";
-    
+
     var speech = new SpeechSynthesisUtterance();
     speech.volume = 1;
-    speech.rate = 1.5; 
+    speech.rate = 1.5;
     speech.pitch = 1;
     speech.text = welcomeMessage;
 
@@ -39,9 +40,10 @@ function playSound() {
     var audio = document.getElementById("clickSound");
     audio.play();
 }
+
 async function convertSpeechToText() {
     return new Promise((resolve, reject) => {
-        const recognition = new window.webkitSpeechRecognition(); 
+        const recognition = new window.webkitSpeechRecognition();
 
         recognition.lang = 'en-US';
 
@@ -57,55 +59,38 @@ async function convertSpeechToText() {
         recognition.start();
     });
 }
+
 document.querySelector('.mic-button').addEventListener('click', async function() {
     this.classList.toggle('active');
     playSound();
 
     try {
-        
         const visitorMessage = await convertSpeechToText();
 
-        
         const messagesList = document.querySelector('.chatbox__messages');
-        const lastMessage = messagesList.lastElementChild;
 
-        
         const visitorMessageItem = document.createElement('div');
         visitorMessageItem.classList.add('messages__item', 'messages__item--visitor');
         visitorMessageItem.textContent = visitorMessage;
 
-        
-        messagesList.insertBefore(visitorMessageItem, lastMessage);
-        
-        messagesList.scrollTop = 0;
+        messagesList.appendChild(visitorMessageItem);
+        messagesList.scrollTop = messagesList.scrollHeight;
 
-        fetch('', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'message': visitorMessage
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const botResponse = data.botResponse;  
+        const thinkingMessageItem = document.createElement('div');
+        thinkingMessageItem.classList.add('messages__item', 'messages__item--operator');
+        thinkingMessageItem.textContent = 'Thinking...⏳';
+        messagesList.appendChild(thinkingMessageItem);
+        messagesList.scrollTop = messagesList.scrollHeight;
 
-            // Create a new message item for the bot's response
-            const botResponseItem = document.createElement('div');
-            botResponseItem.classList.add('messages__item', 'messages__item--operator');
-            botResponseItem.textContent = botResponse; 
-                    
-            // Insert the bot's response after the visitor's message
-            messagesList.insertBefore(botResponseItem, visitorMessageItem); // Insert after the visitor's message
-                
-            messagesList.scrollTop = 0;
+        const botResponse = await fetchBotResponse(visitorMessage);
 
-            document.querySelector('.message-input').value = '';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        const botResponseItem = document.createElement('div');
+        botResponseItem.classList.add('messages__item', 'messages__item--operator');
+        botResponseItem.textContent = botResponse;
+
+        messagesList.replaceChild(botResponseItem, thinkingMessageItem);
+        messagesList.scrollTop = messagesList.scrollHeight;
+
     } catch (error) {
         console.error("Error converting speech to text:", error);
     }
@@ -116,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageInput = document.querySelector('.message-input');
     const messagesList = document.querySelector('.chatbox__messages');
 
-    messageForm.addEventListener('submit', function(event) {
+    messageForm.addEventListener('submit', async function(event) {
         event.preventDefault();
 
         const message = messageInput.value.trim();
@@ -128,33 +113,42 @@ document.addEventListener('DOMContentLoaded', function() {
         messageItem.classList.add('messages__item', 'messages__item--visitor');
         messageItem.textContent = message;
 
-        const lastMessage = messagesList.lastElementChild;
-        messagesList.insertBefore(messageItem, lastMessage);
+        messagesList.appendChild(messageItem);
+        messagesList.scrollTop = messagesList.scrollHeight;
 
-        fetch('', {
+        const thinkingMessageItem = document.createElement('div');
+        thinkingMessageItem.classList.add('messages__item', 'messages__item--operator');
+        thinkingMessageItem.textContent = 'Thinking...⏳';
+        messagesList.appendChild(thinkingMessageItem);
+        messagesList.scrollTop = messagesList.scrollHeight;
+
+        const botResponse = await fetchBotResponse(message);
+
+        const responseItem = document.createElement('div');
+        responseItem.classList.add('messages__item', 'messages__item--operator');
+        responseItem.textContent = botResponse;
+
+        messagesList.replaceChild(responseItem, thinkingMessageItem);
+        messagesList.scrollTop = messagesList.scrollHeight;
+
+        messageInput.value = '';
+    });
+});
+
+async function fetchBotResponse(message) {
+    try {
+        const response = await fetch('', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
                 'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
                 'message': message
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const botResponse = data.botResponse;  
-                    
-            const responseItem = document.createElement('div');
-            responseItem.classList.add('messages__item', 'messages__item--operator');
-            responseItem.textContent = botResponse; 
-                    
-            messagesList.insertBefore(responseItem, messageItem); 
-
-            messagesList.scrollTop = 0;
-        })
-        .catch(error => {
-            console.error('Error:', error);
         });
-
-        messageInput.value = '';
-    });
-});
+        const data = await response.json();
+        return data.botResponse;
+    } catch (error) {
+        console.error('Error:', error);
+        return 'Sorry, there was an error processing your message.';
+    }
+}
