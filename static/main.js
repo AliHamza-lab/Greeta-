@@ -10,41 +10,44 @@ document.getElementById("messageButton").addEventListener("click", function() {
 });
 
 function speakWelcomeMessage() {
-    var welcomeMessage = "Welcome to Vigilant Site, your guardian in workplace safety! " +
+    const welcomeMessage = "Welcome to Vigilant Site, your guardian in workplace safety! " +
         "I'm here to guide you through our world of safety solutions. " +
         "Whether you're curious about our services, need advice on " +
         "safety practices, or have any other questions, I've got you " +
         "covered. How can I assist you today?";
 
-    var speech = new SpeechSynthesisUtterance();
+    const speech = new SpeechSynthesisUtterance();
     speech.volume = 1;
     speech.rate = 1.5;
     speech.pitch = 1;
     speech.text = welcomeMessage;
 
-    var voices = window.speechSynthesis.getVoices();
-    var selectedVoice = voices.find(function(voice) {
-        return voice.name === 'Microsoft Zira - English (United States)';
+    const loadVoices = new Promise((resolve) => {
+        window.speechSynthesis.onvoiceschanged = resolve;
     });
 
-    if (selectedVoice) {
-        speech.voice = selectedVoice;
-    } else {
-        console.error('Could not find a suitable female voice.');
-    }
+    loadVoices.then(() => {
+        const voices = window.speechSynthesis.getVoices();
+        const selectedVoice = voices.find(voice => voice.name === 'Microsoft Zira - English (United States)');
 
-    window.speechSynthesis.speak(speech);
+        if (selectedVoice) {
+            speech.voice = selectedVoice;
+        } else {
+            console.error('Could not find a suitable female voice.');
+        }
+
+        window.speechSynthesis.speak(speech);
+    });
 }
 
 function playSound() {
-    var audio = document.getElementById("clickSound");
+    const audio = document.getElementById("clickSound");
     audio.play();
 }
 
 async function convertSpeechToText() {
     return new Promise((resolve, reject) => {
         const recognition = new window.webkitSpeechRecognition();
-
         recognition.lang = 'en-US';
 
         recognition.onresult = function(event) {
@@ -66,40 +69,20 @@ document.querySelector('.mic-button').addEventListener('click', async function()
 
     try {
         const visitorMessage = await convertSpeechToText();
-
-        const messagesList = document.querySelector('.chatbox__messages');
-
-        const visitorMessageItem = document.createElement('div');
-        visitorMessageItem.classList.add('messages__item', 'messages__item--visitor');
-        visitorMessageItem.textContent = visitorMessage;
-
-        messagesList.appendChild(visitorMessageItem);
-        messagesList.scrollTop = messagesList.scrollHeight;
-
-        const thinkingMessageItem = document.createElement('div');
-        thinkingMessageItem.classList.add('messages__item', 'messages__item--operator');
-        thinkingMessageItem.textContent = 'Thinking...⏳';
-        messagesList.appendChild(thinkingMessageItem);
-        messagesList.scrollTop = messagesList.scrollHeight;
+        appendMessage('visitor', visitorMessage);
+        appendThinkingMessage();  // Display "Thinking..." message
 
         const botResponse = await fetchBotResponse(visitorMessage);
-
-        const botResponseItem = document.createElement('div');
-        botResponseItem.classList.add('messages__item', 'messages__item--operator');
-        botResponseItem.textContent = botResponse;
-
-        messagesList.replaceChild(botResponseItem, thinkingMessageItem);
-        messagesList.scrollTop = messagesList.scrollHeight;
-
+        updateThinkingMessage(botResponse);
     } catch (error) {
         console.error("Error converting speech to text:", error);
+        updateThinkingMessage("Sorry, I couldn't understand that. Please try again.");
     }
 });
 
 document.addEventListener('DOMContentLoaded', function() {
     const messageForm = document.querySelector('.message-form');
     const messageInput = document.querySelector('.message-input');
-    const messagesList = document.querySelector('.chatbox__messages');
 
     messageForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -109,27 +92,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const messageItem = document.createElement('div');
-        messageItem.classList.add('messages__item', 'messages__item--visitor');
-        messageItem.textContent = message;
+        appendMessage('visitor', message);
+        appendThinkingMessage();
 
-        messagesList.appendChild(messageItem);
-        messagesList.scrollTop = messagesList.scrollHeight;
-
-        const thinkingMessageItem = document.createElement('div');
-        thinkingMessageItem.classList.add('messages__item', 'messages__item--operator');
-        thinkingMessageItem.textContent = 'Thinking...⏳';
-        messagesList.appendChild(thinkingMessageItem);
-        messagesList.scrollTop = messagesList.scrollHeight;
-
-        const botResponse = await fetchBotResponse(message);
-
-        const responseItem = document.createElement('div');
-        responseItem.classList.add('messages__item', 'messages__item--operator');
-        responseItem.textContent = botResponse;
-
-        messagesList.replaceChild(responseItem, thinkingMessageItem);
-        messagesList.scrollTop = messagesList.scrollHeight;
+        try {
+            const botResponse = await fetchBotResponse(message);
+            updateThinkingMessage(botResponse);
+        } catch (error) {
+            console.error('Error fetching bot response:', error);
+            updateThinkingMessage("Sorry, there was an error processing your message.");
+        }
 
         messageInput.value = '';
     });
@@ -151,4 +123,45 @@ async function fetchBotResponse(message) {
         console.error('Error:', error);
         return 'Sorry, there was an error processing your message.';
     }
+}
+
+function appendMessage(type, message) {
+    const messagesList = document.querySelector('.chatbox__messages');
+
+    const messageItem = document.createElement('div');
+    messageItem.classList.add('messages__item', `messages__item--${type}`);
+    messageItem.textContent = message;
+
+    // Insert message in the right order
+    const lastMessage = messagesList.lastElementChild;
+    if (lastMessage && lastMessage.classList.contains('messages__item--operator') && type === 'visitor') {
+        messagesList.insertBefore(messageItem, lastMessage);
+    } else {
+        messagesList.appendChild(messageItem);
+    }
+
+    messagesList.scrollTop = messagesList.scrollHeight;
+}
+
+function appendThinkingMessage() {
+    const messagesList = document.querySelector('.chatbox__messages');
+
+    const thinkingMessageItem = document.createElement('div');
+    thinkingMessageItem.classList.add('messages__item', 'messages__item--operator');
+    thinkingMessageItem.textContent = 'Thinking...⏳';
+    thinkingMessageItem.id = 'thinkingMessage';
+    const lastMessage = messagesList.lastElementChild;
+    if (lastMessage && lastMessage.classList.contains('messages__item--operator')) {
+        messagesList.insertBefore(thinkingMessageItem, lastMessage);
+    } else {
+        messagesList.appendChild(thinkingMessageItem);
+    }
+
+    messagesList.scrollTop = messagesList.scrollHeight;
+}
+
+function updateThinkingMessage(response) {
+    const thinkingMessageItem = document.getElementById('thinkingMessage');
+    thinkingMessageItem.textContent = response;
+    thinkingMessageItem.removeAttribute('id');
 }
