@@ -66,7 +66,7 @@ This project features a Guitar Tabs Manager combined with an advanced AI chatbot
 
 ```plaintext
 You: How to play Wonderwall?
-Greeta: Hello how are you 
+Greeta: Hello how are you?
 I don't have a physical body, so I don't get sick. But I'm functioning properly and ready to assist you. 💻
 (Audio response is played)
 ```
